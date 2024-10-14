@@ -3,22 +3,27 @@ package ru.devildeveloper74.model.probability;
 import java.util.List;
 
 public class Probabilities {
-    private List<StandardProbabilities> standardSymbols;
-    private BonusProbabilities bonusSymbols;
+    private List<StandardProbability> standardSymbols;
+    private BonusProbability bonusSymbols;
 
-    public List<StandardProbabilities> getStandardSymbols() {
+    public Probabilities(List<StandardProbability> standardSymbols, BonusProbability bonusSymbols) {
+        this.standardSymbols = standardSymbols;
+        this.bonusSymbols = bonusSymbols;
+    }
+
+    public List<StandardProbability> getStandardSymbols() {
         return standardSymbols;
     }
 
-    public void setStandardSymbols(List<StandardProbabilities> standardSymbols) {
+    public void setStandardSymbols(List<StandardProbability> standardSymbols) {
         this.standardSymbols = standardSymbols;
     }
 
-    public BonusProbabilities getBonusSymbols() {
+    public BonusProbability getBonusSymbols() {
         return bonusSymbols;
     }
 
-    public void setBonusSymbols(BonusProbabilities bonusSymbols) {
+    public void setBonusSymbols(BonusProbability bonusSymbols) {
         this.bonusSymbols = bonusSymbols;
     }
 }

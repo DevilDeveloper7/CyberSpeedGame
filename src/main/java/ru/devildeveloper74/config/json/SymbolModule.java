@@ -1,4 +1,4 @@
-package ru.devildeveloper74.config;
+package ru.devildeveloper74.config.json;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import ru.devildeveloper74.util.SymbolDeserializer;

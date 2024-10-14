@@ -1,6 +1,7 @@
 package ru.devildeveloper74;
 
 import ru.devildeveloper74.config.GameConfig;
+import ru.devildeveloper74.util.GameConfigLoader;
 
 import java.io.IOException;
 
@@ -17,7 +18,7 @@ public class Main {
 //        int betAmount = Integer.parseInt(args[3]);
 
         try {
-            GameConfig config = GameConfig.loadFromFile("/home/night/IdeaProjects/CyberSpeedGame/src/main/resources/defaultConfigShort.json");
+            GameConfig config = GameConfigLoader.loadFromFile("/home/night/IdeaProjects/CyberSpeedGame/src/main/resources/defaultConfig.json");
 //            MatrixGenerator matrixGenerator = new RandomMatrixGenerator(config);
 //            RewardCalculator rewardCalculator = new DefaultRewardCalculator(config);
 //

@@ -26,9 +26,8 @@ public class SymbolDeserializer extends JsonDeserializer<Set<Symbol>> {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
         JsonNode root = mapper.readTree(jsonParser);
 
-        JsonNode symbolsNode = root.get("symbols");
 
-        Iterator<Map.Entry<String, JsonNode>> fields = symbolsNode.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
 
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
