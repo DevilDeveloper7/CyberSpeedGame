@@ -1,4 +1,4 @@
-package ru.devildeveloper74.model.symbol;
+package ru.devildeveloper74.enums;
 
 public enum SymbolType {
     STANDARD, BONUS

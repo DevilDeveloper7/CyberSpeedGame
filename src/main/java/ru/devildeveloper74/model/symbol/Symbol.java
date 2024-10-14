@@ -1,9 +1,10 @@
 package ru.devildeveloper74.model.symbol;
 
+import ru.devildeveloper74.enums.SymbolType;
+
 import java.util.Objects;
 
 public abstract class Symbol {
-
 
     protected String name;
     protected SymbolType type;
@@ -31,12 +32,13 @@ public abstract class Symbol {
         this.type = type;
     }
 
-    public double getRewardMultiplier() {
-        return rewardMultiplier;
+    public void setRewardMultiplier(Double rewardMultiplier) {
+        this.rewardMultiplier = rewardMultiplier;
     }
 
-    public void setRewardMultiplier(double rewardMultiplier) {
-        this.rewardMultiplier = rewardMultiplier;
+
+    public double getRewardMultiplier() {
+        return rewardMultiplier;
     }
 
     public abstract double applyReward(int reward);

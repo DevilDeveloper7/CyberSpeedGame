@@ -1,6 +1,7 @@
 package ru.devildeveloper74.model.symbol;
 
 import ru.devildeveloper74.enums.BonusImpact;
+import ru.devildeveloper74.enums.SymbolType;
 
 public class BonusSymbol extends Symbol {
     private final BonusImpact impact;

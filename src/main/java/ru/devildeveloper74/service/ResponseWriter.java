@@ -2,8 +2,7 @@ package ru.devildeveloper74.service;
 
 import ru.devildeveloper74.model.GameResult;
 
-public interface Game {
+public interface ResponseWriter {
 
-    GameResult play(int betAmount);
-
+    void writeResponse(GameResult result);
 }

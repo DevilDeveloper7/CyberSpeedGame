@@ -1,5 +1,10 @@
 package ru.devildeveloper74.service;
 
+import ru.devildeveloper74.model.symbol.SymbolEntry;
+
 public interface MatrixGenerator {
-    String[][] generateMatrix();
+
+    SymbolEntry[][] generateMatrix();
+
+    void printMatrix(SymbolEntry[][] matrix);
 }
