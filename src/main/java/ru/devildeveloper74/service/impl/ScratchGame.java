@@ -20,7 +20,8 @@ public class ScratchGame implements Game {
         SymbolEntry[][] matrix = matrixGenerator.generateMatrix();
 
         matrixGenerator.printMatrix(matrix);
-//        int reward = rewardCalculator.calculate(matrix, betAmount);
+        int reward = rewardCalculator.calculate(matrix, betAmount);
+        System.out.println(reward);
 
         return null;
     }

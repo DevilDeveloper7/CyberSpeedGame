@@ -35,7 +35,7 @@ public class WinCombination {
         this.when = when;
     }
 
-    public int getCount() {
+    public Integer getCount() {
         return count;
     }
 

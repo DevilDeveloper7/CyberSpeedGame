@@ -41,8 +41,6 @@ public abstract class Symbol {
         return rewardMultiplier;
     }
 
-    public abstract double applyReward(int reward);
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

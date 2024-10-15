@@ -4,10 +4,10 @@ import ru.devildeveloper74.config.GameConfig;
 import ru.devildeveloper74.model.GameResult;
 import ru.devildeveloper74.service.Game;
 import ru.devildeveloper74.service.MatrixGenerator;
-import ru.devildeveloper74.service.ResponseWriter;
 import ru.devildeveloper74.service.RewardCalculator;
-import ru.devildeveloper74.service.impl.ConsoleResponseWriter;
+import ru.devildeveloper74.service.MatrixStatisticCollector;
 import ru.devildeveloper74.service.impl.ScratchGame;
+import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 import ru.devildeveloper74.service.impl.matrix.RandomMatrixGenerator;
 import ru.devildeveloper74.service.impl.rewards.DefaultRewardCalculator;
 import ru.devildeveloper74.util.GameConfigLoader;
@@ -30,6 +30,7 @@ public class Main {
             GameConfig config = GameConfigLoader.loadFromFile("/home/night/IdeaProjects/CyberSpeedGame/src/main/resources/defaultConfig.json");
             MatrixGenerator matrixGenerator = new RandomMatrixGenerator(config);
             RewardCalculator rewardCalculator = new DefaultRewardCalculator(config);
+
             Game game = new ScratchGame(matrixGenerator, rewardCalculator);
 
 

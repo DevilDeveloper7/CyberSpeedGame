@@ -7,6 +7,7 @@ import ru.devildeveloper74.model.symbol.BonusSymbol;
 import ru.devildeveloper74.model.symbol.Symbol;
 import ru.devildeveloper74.model.symbol.SymbolEntry;
 import ru.devildeveloper74.service.MatrixGenerator;
+import ru.devildeveloper74.service.MatrixStatisticCollector;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class RandomMatrixGenerator implements MatrixGenerator {
     @Override
     public SymbolEntry[][] generateMatrix() {
         SymbolEntry[][] matrix = new SymbolEntry[gameConfig.getRows()][gameConfig.getColumns()];
+        MatrixStatisticCollector statisticsCollector = MatrixStatisticCollectorImpl.getInstance();
 
         List<StandardProbability> standardProbabilities = gameConfig.getProbabilities().getStandardSymbols();
         BonusProbability bonusProbability = gameConfig.getProbabilities().getBonusSymbols();
@@ -29,6 +31,7 @@ public class RandomMatrixGenerator implements MatrixGenerator {
         // Get default probabilities from the first cell [0][0]
         StandardProbability uniformStandard = standardProbabilities.getFirst();
         int totalBonusProbability = calculateTotalProbability(bonusProbability.getSymbolProbabilityMap());
+        int totalStandardProbability = calculateTotalProbability(uniformStandard.getSymbolProbabilityMap());
 
         boolean bonusGenerated = false;
 
@@ -39,31 +42,45 @@ public class RandomMatrixGenerator implements MatrixGenerator {
                 int column = standard.getColumn();
 
                 // Calculate total probabilities for this cell
-                int totalStandardProbability = calculateTotalProbability(standard.getSymbolProbabilityMap());
+                totalStandardProbability = calculateTotalProbability(standard.getSymbolProbabilityMap());
 
                 // Select a symbol for this specific cell
-                Symbol selectedSymbol = selectSymbolBasedOnCategory(standard, bonusProbability, totalStandardProbability, totalBonusProbability, bonusGenerated);
+                Symbol selectedSymbol = selectSymbolBasedOnCategory(
+                        standard,
+                        bonusProbability,
+                        totalStandardProbability,
+                        totalBonusProbability,
+                        bonusGenerated
+                );
                 if (selectedSymbol instanceof BonusSymbol) {
                     bonusGenerated = true;
                 }
 
-                matrix[row][column] = new SymbolEntry(selectedSymbol, row, column);
+                SymbolEntry entry = new SymbolEntry(selectedSymbol, row, column);
+                matrix[row][column] = entry;
+                statisticsCollector.recordSymbolEntry(entry);
             }
         }
         // Case 2: Single StandardProbability object, uniform probabilities for all cells
         else if (standardProbabilities.size() == 1) {
 
-            // Calculate total probabilities for uniform distribution
-            int totalStandardProbability = calculateTotalProbability(uniformStandard.getSymbolProbabilityMap());
-
             // Fill the matrix uniformly with random symbols based on the uniform probabilities
             for (int row = 0; row < gameConfig.getRows(); row++) {
                 for (int column = 0; column < gameConfig.getColumns(); column++) {
-                    Symbol selectedSymbol = selectSymbolBasedOnCategory(uniformStandard, bonusProbability, totalStandardProbability, totalBonusProbability, bonusGenerated);
+                    Symbol selectedSymbol = selectSymbolBasedOnCategory(
+                            uniformStandard,
+                            bonusProbability,
+                            totalStandardProbability,
+                            totalBonusProbability,
+                            bonusGenerated
+                    );
                     if (selectedSymbol instanceof BonusSymbol) {
                         bonusGenerated = true;
                     }
-                    matrix[row][column] = new SymbolEntry(selectedSymbol, row, column);
+
+                    SymbolEntry entry = new SymbolEntry(selectedSymbol, row, column);
+                    matrix[row][column] = entry;
+                    statisticsCollector.recordSymbolEntry(entry);
                 }
             }
         }
@@ -71,23 +88,35 @@ public class RandomMatrixGenerator implements MatrixGenerator {
         for (int row = 0; row < gameConfig.getRows(); row++) {
             for (int column = 0; column < gameConfig.getColumns(); column++) {
                 if (matrix[row][column] == null) {
-                    // Use default probabilities from [0][0]
-                    int totalStandardProbability = calculateTotalProbability(uniformStandard.getSymbolProbabilityMap());
 
-                    Symbol selectedSymbol = selectSymbolBasedOnCategory(uniformStandard, bonusProbability, totalStandardProbability, totalBonusProbability, bonusGenerated);
+                    Symbol selectedSymbol = selectSymbolBasedOnCategory(
+                            uniformStandard,
+                            bonusProbability,
+                            totalStandardProbability,
+                            totalBonusProbability,
+                            bonusGenerated
+                    );
                     if (selectedSymbol instanceof BonusSymbol) {
                         bonusGenerated = true;
                     }
-                    matrix[row][column] = new SymbolEntry(selectedSymbol, row, column);
+
+                    SymbolEntry entry = new SymbolEntry(selectedSymbol, row, column);
+                    matrix[row][column] = entry;
+                    statisticsCollector.recordSymbolEntry(entry);
                 }
             }
         }
-
         return matrix;
     }
 
     // Select a symbol based on the category (standard or bonus)
-    private Symbol selectSymbolBasedOnCategory(StandardProbability standard, BonusProbability bonus, int totalStandardProbability, int totalBonusProbability, boolean bonusGenerated) {
+    private Symbol selectSymbolBasedOnCategory(
+            StandardProbability standard,
+            BonusProbability bonus,
+            int totalStandardProbability,
+            int totalBonusProbability,
+            boolean bonusGenerated
+    ) {
         int totalCombinedProbability = totalStandardProbability + (bonusGenerated ? 0 : totalBonusProbability);
         int randomValue = new Random().nextInt(totalCombinedProbability) + 1;
 
@@ -122,7 +151,8 @@ public class RandomMatrixGenerator implements MatrixGenerator {
             }
             randomValue -= symbolProbability;
         }
-        return symbolProbabilityMap.entrySet().stream().findAny().get().getKey(); // Random symbol selected
+        // Random symbol selected if with probability selected nothing
+        return symbolProbabilityMap.entrySet().stream().findAny().get().getKey();
     }
 
     @Override
@@ -144,7 +174,7 @@ public class RandomMatrixGenerator implements MatrixGenerator {
                 SymbolEntry entry = matrix[i][j];
                 System.out.print(entry.toString() + " ");
             }
-            System.out.println(); // Move to the next line after each row
+            System.out.println();
         }
     }
 }

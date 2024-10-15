@@ -13,11 +13,6 @@ public class BonusSymbol extends Symbol {
         this.extra = extra;
     }
 
-    @Override
-    public double applyReward(int reward) {
-        return 0;
-    }
-
     public int getExtra() {
         return extra;
     }
