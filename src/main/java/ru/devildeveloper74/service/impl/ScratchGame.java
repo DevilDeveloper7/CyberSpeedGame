@@ -4,7 +4,9 @@ import ru.devildeveloper74.model.GameResult;
 import ru.devildeveloper74.model.symbol.SymbolEntry;
 import ru.devildeveloper74.service.Game;
 import ru.devildeveloper74.service.MatrixGenerator;
+import ru.devildeveloper74.service.MatrixStatisticCollector;
 import ru.devildeveloper74.service.RewardCalculator;
+import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 
 public class ScratchGame implements Game {
     private final MatrixGenerator matrixGenerator;
@@ -17,12 +19,16 @@ public class ScratchGame implements Game {
 
     @Override
     public GameResult play(int betAmount) {
+        MatrixStatisticCollector statisticCollector = MatrixStatisticCollectorImpl.getInstance();
         SymbolEntry[][] matrix = matrixGenerator.generateMatrix();
-
-        matrixGenerator.printMatrix(matrix);
         int reward = rewardCalculator.calculate(matrix, betAmount);
-        System.out.println(reward);
+        String[][] outputMatrix = matrixGenerator.convertToStringMatrix(matrix);
 
-        return null;
+        return new GameResult(
+                outputMatrix,
+                reward,
+                statisticCollector.getWinCombinationAppliedMap(),
+                statisticCollector.getBonusAppliedForGame() == null ? "no bonus has been applied" : statisticCollector.getBonusAppliedForGame().getName()
+        );
     }
 }

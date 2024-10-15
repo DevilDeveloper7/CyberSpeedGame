@@ -5,7 +5,6 @@ import ru.devildeveloper74.enums.SymbolType;
 import java.util.Objects;
 
 public abstract class Symbol {
-
     protected String name;
     protected SymbolType type;
     protected Double rewardMultiplier;
@@ -32,13 +31,12 @@ public abstract class Symbol {
         this.type = type;
     }
 
-    public void setRewardMultiplier(Double rewardMultiplier) {
-        this.rewardMultiplier = rewardMultiplier;
-    }
-
-
     public double getRewardMultiplier() {
         return rewardMultiplier;
+    }
+
+    public void setRewardMultiplier(Double rewardMultiplier) {
+        this.rewardMultiplier = rewardMultiplier;
     }
 
     @Override

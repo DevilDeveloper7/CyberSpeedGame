@@ -5,10 +5,9 @@ import ru.devildeveloper74.model.symbol.Symbol;
 import java.util.Map;
 
 public class StandardProbability {
-
     private int column;
     private int row;
-    private Map<Symbol, Integer> symbolProbabilityMap;  // e.g., {"A": 1, "B": 2}
+    private Map<Symbol, Integer> symbolProbabilityMap;
 
     public int getColumn() {
         return column;

@@ -8,7 +8,6 @@ import ru.devildeveloper74.util.ProbabilitiesDeserializer;
 import java.util.Set;
 
 public class ProbabilitiesModule extends SimpleModule {
-
     public ProbabilitiesModule(Set<Symbol> symbolRegistry) {
         addDeserializer(Probabilities.class, new ProbabilitiesDeserializer(symbolRegistry));
     }

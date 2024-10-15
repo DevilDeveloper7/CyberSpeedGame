@@ -15,6 +15,7 @@ import java.util.Random;
 
 public class RandomMatrixGenerator implements MatrixGenerator {
     private final GameConfig gameConfig;
+    private static final int BONUS_SYMBOL_APPEARANCE_PROBABILITY = 10;
 
     public RandomMatrixGenerator(GameConfig config) {
         this.gameConfig = config;
@@ -122,9 +123,9 @@ public class RandomMatrixGenerator implements MatrixGenerator {
 
         // Decide if the symbol will be from standard or bonus category
         if (!bonusGenerated && randomValue > totalStandardProbability) {
-            // Introduce a chance to skip the bonus symbol, allowing it to appear only sometimes
+            //Chance to skip the bonus symbol, allowing it to appear only sometimes
             int bonusChance = new Random().nextInt(100);
-            if (bonusChance < 10) { // e.g., 10% chance to generate the bonus symbol
+            if (bonusChance < BONUS_SYMBOL_APPEARANCE_PROBABILITY) { // e.g., 10% chance to generate the bonus symbol
                 randomValue -= totalStandardProbability;
                 return selectSymbolFromMap(bonus.getSymbolProbabilityMap(), randomValue);
             }
@@ -155,6 +156,23 @@ public class RandomMatrixGenerator implements MatrixGenerator {
         return symbolProbabilityMap.entrySet().stream().findAny().get().getKey();
     }
 
+
+    @Override
+    public String[][] convertToStringMatrix(SymbolEntry[][] matrix) {
+        int rows = matrix.length;
+        int columns = matrix[0].length;
+
+        String[][] stringMatrix = new String[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                stringMatrix[i][j] = matrix[i][j].symbol().getName();
+            }
+        }
+
+        return stringMatrix;
+    }
+
     @Override
     public void printMatrix(SymbolEntry[][] matrix) {
         System.out.println("Matrix Symbol Entries:");
@@ -162,16 +180,15 @@ public class RandomMatrixGenerator implements MatrixGenerator {
             for (int column = 0; column < matrix[row].length; column++) {
                 SymbolEntry entry = matrix[row][column];
                 if (entry != null) {
-                    System.out.printf("Row: %d, Column: %d, Symbol: %s%n", entry.row(), entry.column(), entry.toString());
+                    System.out.printf("Row: %d, Column: %d, Symbol: %s%n", entry.row(), entry.column(), entry);
                 } else {
                     System.out.printf("Row: %d, Column: %d, Symbol: null%n", row, column);
                 }
             }
         }
 
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                SymbolEntry entry = matrix[i][j];
+        for (SymbolEntry[] symbolEntries : matrix) {
+            for (SymbolEntry entry : symbolEntries) {
                 System.out.print(entry.toString() + " ");
             }
             System.out.println();

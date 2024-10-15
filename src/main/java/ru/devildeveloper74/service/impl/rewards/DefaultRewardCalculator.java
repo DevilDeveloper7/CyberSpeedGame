@@ -7,10 +7,9 @@ import ru.devildeveloper74.model.symbol.Symbol;
 import ru.devildeveloper74.model.symbol.SymbolEntry;
 import ru.devildeveloper74.service.MatrixStatisticCollector;
 import ru.devildeveloper74.service.RewardCalculator;
+import ru.devildeveloper74.service.WinCombinationChecker;
 import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +23,8 @@ public class DefaultRewardCalculator implements RewardCalculator {
     @Override
     public int calculate(SymbolEntry[][] matrix, int betAmount) {
         MatrixStatisticCollector matrixStatisticCollector = MatrixStatisticCollectorImpl.getInstance();
+        WinCombinationChecker winCombinationChecker = new WinCombinationCheckerImpl(gameConfig);
+
         double totalReward = 0.0;
         boolean isWinGame = false;
 
@@ -39,7 +40,7 @@ public class DefaultRewardCalculator implements RewardCalculator {
             }
 
             // Get winning combinations for the symbol if it meets the threshold count
-            Set<WinCombination> matchingCombinations = findMatchingCombinations(count);
+            Set<WinCombination> matchingCombinations = winCombinationChecker.findMatchingCombinations(symbolEntry.symbol(), count);
 
             // If symbol has at least one matching win combination, apply the formula
             if (!matchingCombinations.isEmpty()) {
@@ -61,6 +62,7 @@ public class DefaultRewardCalculator implements RewardCalculator {
 
         if (bonusSymbol != null && isWinGame) {
             totalReward = applyBonus(bonusSymbol, totalReward);
+            matrixStatisticCollector.setBonusAppliedForGame(bonusSymbol);
         }
 
         if (!isWinGame) {
@@ -68,31 +70,6 @@ public class DefaultRewardCalculator implements RewardCalculator {
         }
 
         return (int) totalReward;
-    }
-
-    // Helper method to find all winning combinations for a symbol that matches the count threshold
-    private Set<WinCombination> findMatchingCombinations(int count) {
-        // Map to store the largest multiplier for each 'when' category
-        Map<String, WinCombination> bestCombinations = new HashMap<>();
-
-        for (WinCombination winCombination : gameConfig.getWinCombinations()) {
-            if (winCombination.getCount() != null && count >= winCombination.getCount()) {
-                String whenCategory = winCombination.getWhen();
-
-                // If this 'when' category already has a combination, compare multipliers
-                if (bestCombinations.containsKey(whenCategory)) {
-                    WinCombination existingCombination = bestCombinations.get(whenCategory);
-
-                    // Replace with the combination with the highest multiplier
-                    if (winCombination.getRewardMultiplier() > existingCombination.getRewardMultiplier()) {
-                        bestCombinations.put(whenCategory, winCombination);
-                    }
-                } else {
-                    bestCombinations.put(whenCategory, winCombination);
-                }
-            }
-        }
-        return new HashSet<>(bestCombinations.values());
     }
 
     @Override
