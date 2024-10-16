@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Random;
 
 public class RandomMatrixGenerator implements MatrixGenerator {
-    private final GameConfig gameConfig;
     private static final int BONUS_SYMBOL_APPEARANCE_PROBABILITY = 10;
+    private final GameConfig gameConfig;
 
     public RandomMatrixGenerator(GameConfig config) {
         this.gameConfig = config;
@@ -141,7 +141,6 @@ public class RandomMatrixGenerator implements MatrixGenerator {
                 .sum();
     }
 
-    // Helper function to select a symbol from a probability map
     private Symbol selectSymbolFromMap(Map<Symbol, Integer> symbolProbabilityMap, int randomValue) {
         for (Map.Entry<Symbol, Integer> entry : symbolProbabilityMap.entrySet()) {
             Symbol symbol = entry.getKey();

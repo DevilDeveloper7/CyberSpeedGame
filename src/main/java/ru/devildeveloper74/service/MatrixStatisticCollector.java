@@ -1,10 +1,11 @@
 package ru.devildeveloper74.service;
 
+import ru.devildeveloper74.model.WinCombination;
 import ru.devildeveloper74.model.symbol.Symbol;
 import ru.devildeveloper74.model.symbol.SymbolEntry;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface MatrixStatisticCollector {
     void recordSymbolEntry(SymbolEntry entry);
@@ -13,9 +14,9 @@ public interface MatrixStatisticCollector {
 
     Map<SymbolEntry, Integer> getSymbolEntryCountMap();
 
-    void recordWinCombinationApplied(String symbol, List<String> combinations);
+    void recordWinCombinationApplied(Symbol symbol, Set<WinCombination> combinations);
 
-    Map<String, List<String>> getWinCombinationAppliedMap();
+    Map<Symbol, Set<WinCombination>> getWinCombinationAppliedMap();
 
     Symbol getBonusAppliedForGame();
 

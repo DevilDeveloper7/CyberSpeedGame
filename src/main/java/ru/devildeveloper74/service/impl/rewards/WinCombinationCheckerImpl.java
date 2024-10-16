@@ -3,53 +3,135 @@ package ru.devildeveloper74.service.impl.rewards;
 import ru.devildeveloper74.config.GameConfig;
 import ru.devildeveloper74.model.WinCombination;
 import ru.devildeveloper74.model.symbol.Symbol;
+import ru.devildeveloper74.model.symbol.SymbolEntry;
+import ru.devildeveloper74.model.symbol.SymbolWinCombination;
 import ru.devildeveloper74.service.MatrixStatisticCollector;
 import ru.devildeveloper74.service.WinCombinationChecker;
 import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class WinCombinationCheckerImpl implements WinCombinationChecker {
     private final GameConfig gameConfig;
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     public WinCombinationCheckerImpl(GameConfig gameConfig) {
         this.gameConfig = gameConfig;
     }
 
-    // Helper method to find all winning combinations for a symbol that matches the count threshold
-    public Set<WinCombination> findMatchingCombinations(Symbol symbol, int count) {
-        MatrixStatisticCollector matrixStatisticCollector = MatrixStatisticCollectorImpl.getInstance();
+    @Override
+    public void checkWinningPatterns(SymbolEntry[][] matrix) throws ExecutionException, InterruptedException {
+        MatrixStatisticCollector statisticCollector = MatrixStatisticCollectorImpl.getInstance();
+        Map<String, List<WinCombination>> groupedCombinations = gameConfig.groupWinCombinations();
+        List<Callable<Set<SymbolWinCombination>>> tasks = new ArrayList<>();
+        Set<SymbolWinCombination> symbolWinCombinations = new HashSet<>();
 
-        // Map to store the largest multiplier for each 'when' category
-        Map<String, WinCombination> bestCombinations = new HashMap<>();
+        // Process each group of win combinations in parallel
+        for (Map.Entry<String, List<WinCombination>> entry : groupedCombinations.entrySet()) {
+            List<WinCombination> groupCombinations = entry.getValue();
+            tasks.add(() -> processGroup(groupCombinations, matrix));
+        }
 
-        for (WinCombination winCombination : gameConfig.getWinCombinations()) {
-            if (winCombination.getCount() != null && count >= winCombination.getCount()) {
-                String whenCategory = winCombination.getWhen();
+        // Execute all tasks in parallel
+        List<Future<Set<SymbolWinCombination>>> results = executorService.invokeAll(tasks);
 
-                // If this 'when' category already has a combination, compare multipliers
-                if (bestCombinations.containsKey(whenCategory)) {
-                    WinCombination existingCombination = bestCombinations.get(whenCategory);
+        for (Future<Set<SymbolWinCombination>> result : results) {
+            try {
+                Set<SymbolWinCombination> combinations = result.get();
+                symbolWinCombinations.addAll(combinations);
+            } catch (ExecutionException e) {
+                System.err.println("Error in task: " + e.getCause().getMessage());
+                throw new ExecutionException("Error processing tasks", e.getCause());
+            }
+        }
 
-                    // Replace with the combination with the highest multiplier
-                    if (winCombination.getRewardMultiplier() > existingCombination.getRewardMultiplier()) {
-                        bestCombinations.put(whenCategory, winCombination);
+        Map<String, WinCombination> largestCombinations = symbolWinCombinations.stream()
+                .collect(Collectors.toMap(
+                        symbolWinCombination -> symbolWinCombination.winCombination().getWhen(),
+                        SymbolWinCombination::winCombination,
+                        (existingCombination, newCombination) ->
+                                // Keep the one with the largest 'count'
+                                newCombination.getRewardMultiplier() > existingCombination.getRewardMultiplier() ? newCombination : existingCombination
+                ));
 
-                        //Updating the statistic of applied combinations to current matrix
-                        matrixStatisticCollector.getWinCombinationAppliedMap().remove(symbol.getName());
-                        matrixStatisticCollector.recordWinCombinationApplied(symbol.getName(), new ArrayList<String>() {{
-                            add(winCombination.getName());
-                        }});
-                    }
-                } else {
-                    bestCombinations.put(whenCategory, winCombination);
+        // Now record only the largest combinations in the statisticCollector
+        largestCombinations.forEach((when, winCombination) -> {
+            Symbol symbol = symbolWinCombinations.parallelStream()
+                    .filter(sw -> sw.winCombination().equals(winCombination))
+                    .findFirst()
+                    .orElseThrow()
+                    .symbol();
 
-                    matrixStatisticCollector.recordWinCombinationApplied(symbol.getName(), new ArrayList<String>() {{
-                        add(winCombination.getName());
-                    }});
+            statisticCollector.recordWinCombinationApplied(symbol, Collections.singleton(winCombination));
+        });
+    }
+
+    private Set<SymbolWinCombination> processGroup(List<WinCombination> groupCombinations, SymbolEntry[][] matrix) {
+        Set<SymbolWinCombination> winCombinations = new HashSet<>();
+
+        for (WinCombination winCombination : groupCombinations) {
+            if (winCombination.getCoveredAreas() == null || winCombination.getCoveredAreas().isEmpty()) {
+                // If there are no covered areas, check for duplicate symbols in the matrix
+                Set<SymbolWinCombination> matchingCombinations = checkDuplicatesInMatrix(matrix, winCombination);
+
+                // Record the combinations in the matrix collector
+                winCombinations.addAll(matchingCombinations);
+            } else {
+                // Otherwise, check for winning patterns based on the covered areas
+                SymbolWinCombination matchingAnyPattern = checkPattern(matrix, winCombination);
+                if (matchingAnyPattern != null) {
+                    winCombinations.add(matchingAnyPattern);
                 }
             }
         }
-        return new HashSet<>(bestCombinations.values());
+
+        return winCombinations;
+    }
+
+    // Method to check for duplicate symbols in the matrix
+    private Set<SymbolWinCombination> checkDuplicatesInMatrix(SymbolEntry[][] matrix, WinCombination winCombination) {
+        MatrixStatisticCollector matrixStatisticCollector = MatrixStatisticCollectorImpl.getInstance();
+        Set<SymbolWinCombination> matchingCombinations = new HashSet<>();
+
+        // Check for matching combinations based on symbol appearing count
+        for (SymbolEntry[] row : matrix) {
+            for (SymbolEntry entry : row) {
+                Symbol symbol = entry.symbol();
+                int symbolAppearingCount = matrixStatisticCollector.getSymbolEntryCount(entry);
+                if (symbolAppearingCount >= winCombination.getCount()) {
+                    matchingCombinations.add(new SymbolWinCombination(symbol, winCombination));
+                }
+            }
+        }
+        return matchingCombinations;
+    }
+
+    private SymbolWinCombination checkPattern(SymbolEntry[][] matrix, WinCombination winCombination) {
+        List<List<String>> coveredAreas = winCombination.getCoveredAreas();
+        if (coveredAreas != null && !coveredAreas.isEmpty()) {
+            for (List<String> area : coveredAreas) {
+                Set<Symbol> symbolsInArea = new HashSet<>();
+                Symbol winningSymbol = null; // Variable to store the winning symbol
+                for (String coordinate : area) {
+                    String[] parts = coordinate.split(":");
+                    int row = Integer.parseInt(parts[0]);
+                    int col = Integer.parseInt(parts[1]);
+                    Symbol currentSymbol = matrix[row][col].symbol();
+                    symbolsInArea.add(currentSymbol);
+
+                    // Store the first symbol as potential winning symbol
+                    if (winningSymbol == null) {
+                        winningSymbol = currentSymbol;
+                    }
+                }
+                // If all symbols are the same, return the winning symbol and the combination
+                if (symbolsInArea.size() == 1) {
+                    return new SymbolWinCombination(winningSymbol, winCombination);
+                }
+            }
+        }
+        return null; // Return null if no winning combination found
     }
 }

@@ -1,10 +1,9 @@
 package ru.devildeveloper74.service;
 
-import ru.devildeveloper74.model.WinCombination;
-import ru.devildeveloper74.model.symbol.Symbol;
+import ru.devildeveloper74.model.symbol.SymbolEntry;
 
-import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public interface WinCombinationChecker {
-    Set<WinCombination> findMatchingCombinations(Symbol symbol, int count);
+    void checkWinningPatterns(SymbolEntry[][] matrix) throws ExecutionException, InterruptedException;
 }

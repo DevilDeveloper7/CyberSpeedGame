@@ -12,6 +12,7 @@ import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class DefaultRewardCalculator implements RewardCalculator {
     private final GameConfig gameConfig;
@@ -21,52 +22,52 @@ public class DefaultRewardCalculator implements RewardCalculator {
     }
 
     @Override
-    public int calculate(SymbolEntry[][] matrix, int betAmount) {
+    public int calculate(SymbolEntry[][] matrix, int betAmount) throws ExecutionException, InterruptedException {
+        double totalReward = 0.0;
+        //if matrix has a bonus symbol it should be stored for latest calculation of adding bonus reward
+        BonusSymbol bonusSymbol = null;
         MatrixStatisticCollector matrixStatisticCollector = MatrixStatisticCollectorImpl.getInstance();
         WinCombinationChecker winCombinationChecker = new WinCombinationCheckerImpl(gameConfig);
 
-        double totalReward = 0.0;
-        boolean isWinGame = false;
+        winCombinationChecker.checkWinningPatterns(matrix);
 
-        //if matrix has a bonus symbol it should be stored for latest calculation of adding bonus reward
-        BonusSymbol bonusSymbol = null;
+        boolean isWinGame = matrixStatisticCollector.getWinCombinationAppliedMap()
+                .values()
+                .stream()
+                .anyMatch(s -> !s.isEmpty());
 
-        for (Map.Entry<SymbolEntry, Integer> entry : matrixStatisticCollector.getSymbolEntryCountMap().entrySet()) {
-            SymbolEntry symbolEntry = entry.getKey();
-            int count = entry.getValue();
+        if (!isWinGame) {
+            return 0;
+        }
 
-            if (symbolEntry.symbol() instanceof BonusSymbol) {
-                bonusSymbol = (BonusSymbol) symbolEntry.symbol();
+        for (Map.Entry<Symbol, Set<WinCombination>> entry : matrixStatisticCollector.getWinCombinationAppliedMap().entrySet()) {
+            Symbol symbol = entry.getKey();
+            Set<WinCombination> winCombinations = entry.getValue();
+
+            if (symbol instanceof BonusSymbol) {
+                bonusSymbol = (BonusSymbol) symbol;
             }
 
-            // Get winning combinations for the symbol if it meets the threshold count
-            Set<WinCombination> matchingCombinations = winCombinationChecker.findMatchingCombinations(symbolEntry.symbol(), count);
-
             // If symbol has at least one matching win combination, apply the formula
-            if (!matchingCombinations.isEmpty()) {
+            if (!winCombinations.isEmpty()) {
                 double symbolReward = betAmount; // Start with the bet amount
-                isWinGame = true;
 
                 // Multiply for each matching combination
-                for (WinCombination winCombination : matchingCombinations) {
+                for (WinCombination winCombination : winCombinations) {
                     symbolReward *= winCombination.getRewardMultiplier();
                 }
 
                 // Multiply by the basic symbol reward multiplier
-                symbolReward *= symbolEntry.symbol().getRewardMultiplier();
+                symbolReward *= symbol.getRewardMultiplier();
 
                 // Add symbol reward to the total reward
                 totalReward += symbolReward;
             }
         }
 
-        if (bonusSymbol != null && isWinGame) {
+        if (bonusSymbol != null) {
             totalReward = applyBonus(bonusSymbol, totalReward);
             matrixStatisticCollector.setBonusAppliedForGame(bonusSymbol);
-        }
-
-        if (!isWinGame) {
-            return 0;
         }
 
         return (int) totalReward;

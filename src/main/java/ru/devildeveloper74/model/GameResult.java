@@ -1,8 +1,10 @@
 package ru.devildeveloper74.model;
 
-import java.util.List;
-import java.util.Map;
+import ru.devildeveloper74.model.symbol.Symbol;
 
-public record GameResult(String[][] matrix, int reward, Map<String, List<String>> appliedWinningCombinations,
+import java.util.Map;
+import java.util.Set;
+
+public record GameResult(String[][] matrix, int reward, Map<Symbol, Set<WinCombination>> appliedWinningCombinations,
                          String appliedBonusSymbol) {
 }

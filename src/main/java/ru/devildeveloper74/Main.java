@@ -13,6 +13,7 @@ import ru.devildeveloper74.service.impl.rewards.DefaultRewardCalculator;
 import ru.devildeveloper74.util.GameConfigLoader;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class Main {
     public static void main(String[] args) {
@@ -34,6 +35,8 @@ public class Main {
             writer.writeResponse(result);
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }

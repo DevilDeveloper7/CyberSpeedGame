@@ -8,6 +8,8 @@ import ru.devildeveloper74.service.MatrixStatisticCollector;
 import ru.devildeveloper74.service.RewardCalculator;
 import ru.devildeveloper74.service.impl.matrix.MatrixStatisticCollectorImpl;
 
+import java.util.concurrent.ExecutionException;
+
 public class ScratchGame implements Game {
     private final MatrixGenerator matrixGenerator;
     private final RewardCalculator rewardCalculator;
@@ -18,7 +20,7 @@ public class ScratchGame implements Game {
     }
 
     @Override
-    public GameResult play(int betAmount) {
+    public GameResult play(int betAmount) throws ExecutionException, InterruptedException {
         MatrixStatisticCollector statisticCollector = MatrixStatisticCollectorImpl.getInstance();
         SymbolEntry[][] matrix = matrixGenerator.generateMatrix();
         int reward = rewardCalculator.calculate(matrix, betAmount);

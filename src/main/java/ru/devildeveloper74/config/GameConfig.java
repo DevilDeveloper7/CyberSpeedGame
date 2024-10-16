@@ -5,7 +5,9 @@ import ru.devildeveloper74.model.probability.Probabilities;
 import ru.devildeveloper74.model.symbol.Symbol;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GameConfig {
     private int columns;
@@ -52,6 +54,11 @@ public class GameConfig {
 
     public void setWinCombinations(List<WinCombination> winCombinations) {
         this.winCombinations = winCombinations;
+    }
+
+    public Map<String, List<WinCombination>> groupWinCombinations() {
+        return winCombinations.stream()
+                .collect(Collectors.groupingBy(WinCombination::getGroup));
     }
 
     @Override
